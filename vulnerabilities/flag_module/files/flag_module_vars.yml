@@ -1,0 +1,6 @@
+flag_dir: "/opt/flag"  
+num_words: 3
+flag_filenames:
+  - "financial_report.xlsx"
+  - "admin_credentials.txt"
+  - "salaries.pdf"

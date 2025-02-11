@@ -1,0 +1,5 @@
+strings_to_leak:
+  - "Sensitive netcat backdoor info"
+leaked_filenames:
+  - "chroot_leaked_file.txt"
+

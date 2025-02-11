@@ -1,0 +1,16 @@
+<VirtualHost *:{{ wordpress_port }}>
+    ServerAdmin {{ admin_email }}
+    ServerName {{ ansible_default_ipv4.address }}
+
+    DocumentRoot /var/www/wordpress
+
+    <Directory /var/www/wordpress>
+        Options Indexes FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    ErrorLog ${APACHE_LOG_DIR}/wordpress_error.log
+    CustomLog ${APACHE_LOG_DIR}/wordpress_access.log combined
+</VirtualHost>
+

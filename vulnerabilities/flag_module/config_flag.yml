@@ -1,0 +1,42 @@
+---
+- name: Generate flag file with random content using Faker
+  hosts: testserver
+  become: yes
+  vars_files:
+    - files/flag_module_vars.yml
+    
+  tasks:
+    - name: Update apt cache and install pip
+      apt:
+        name:
+          - python3-pip
+        state: present
+        update_cache: yes
+  
+    - name: Ensure flag directory exists
+      file:
+        path: "{{ flag_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Install Faker
+      pip:
+        name: Faker
+        executable: pip3
+
+    - name: Choose a random filename from the list
+      set_fact:
+        flag_filename: "{{ flag_filenames | random }}"
+
+    - name: Generate random flag content using Faker
+      shell: |
+        python3 -c "from faker import Faker; import random; fake = Faker(); print(' '.join(fake.words(nb={{ num_words }})))"
+      register: flag_content
+      changed_when: false
+
+    - name: Create flag file with generated content
+      copy:
+        dest: "{{ flag_dir }}/{{ flag_filename }}"
+        content: "{{ flag_content.stdout }}"
+        mode: '0644'
+

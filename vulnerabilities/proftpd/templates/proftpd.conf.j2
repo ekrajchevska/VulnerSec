@@ -1,0 +1,69 @@
+{#  
+  Variables assumed:
+  - proftpd_port
+  - server_name
+  - welcome_msg
+  - ftp_user (for Anonymous ~ftp_user)
+#}
+
+# /etc/proftpd/proftpd.conf  -- This is a basic ProFTPD configuration file.
+# To really apply changes, reload proftpd after modifications...
+
+ServerName            "{{ server_name }}"
+ServerType            standalone
+
+Port                  {{ proftpd_port }}
+
+UseIPv6               off
+IdentLookups          off
+
+RootLogin             on
+
+DefaultRoot           /
+
+Include /etc/proftpd/modules.conf
+
+DeferWelcome          off
+DefaultServer         on
+ShowSymlinks          on
+
+TimeoutNoTransfer     600
+TimeoutStalled        600
+TimeoutIdle           1200
+
+AccessGrantMsg        "{{ welcome_msg }}"
+
+<IfModule mod_delay.c>
+  DelayEngine on
+</IfModule>
+
+MaxInstances          30
+
+User                  root
+Group                 nogroup
+
+Umask                 022 022
+AllowOverwrite        on
+
+TransferLog           /var/log/proftpd/xferlog.log
+SystemLog             /var/log/proftpd/proftpd.log
+
+#<Anonymous /home/ftp>
+#  User                root
+#  Group               root
+#  UserAlias           anonymous root
+#  RequireValidShell   off
+#  AnonRequirePassword off
+#  MaxClients          10
+#  DisplayLogin        welcome.msg
+#  DisplayChdir        .message
+#
+#  <Directory *>
+#    <Limit WRITE>
+#     DenyAll
+#    </Limit>
+#  </Directory>
+#</Anonymous>
+#
+#Include /etc/proftpd/conf.d/
+#

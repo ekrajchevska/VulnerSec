@@ -1,0 +1,6 @@
+leaked_filenames:
+  - "nfs_rootshare-file-leak.txt"
+
+strings_to_leak:
+  - "NFS information leak from /root"
+

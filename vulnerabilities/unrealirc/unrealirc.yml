@@ -1,0 +1,90 @@
+---
+- name: Deploy UnrealIRCd vulnerability
+  hosts: testserver
+  become: yes
+  vars:
+    compile: false
+    
+  tasks:
+    - name: Install required packages
+      apt:
+        name:
+          - libssl-dev
+          - tcpd
+        state: present
+        
+    - block:
+        - name: Copy Unreal3.2.8.1.tar.gz archive to target
+          copy:
+            src: files/Unreal3.2.8.1.tar.gz
+            dest: /usr/local/src/Unreal3.2.8.1.tar.gz
+            owner: root
+            group: root
+            mode: '0644'
+
+        - name: Unarchive Unreal3.2.8.1.tar.gz
+          unarchive:
+            src: /usr/local/src/Unreal3.2.8.1.tar.gz
+            dest: /usr/local/src
+            remote_src: yes
+            creates: /usr/local/src/Unreal3.2.8.1
+          register: unreal_unarchive
+
+        - name: Compile UnrealIRCd from source
+          command: ./configure && make
+          args:
+            chdir: /usr/local/src/Unreal3.2.8.1
+          register: compile_result
+
+        - name: Fail if compilation failed
+          fail:
+            msg: "Compilation of UnrealIRCd failed."
+          when: compile_result.rc != 0
+
+        - name: Start UnrealIRCd (compiled version)
+          command: ./unreal start
+          args:
+            chdir: /usr/local/src/Unreal3.2.8.1
+          register: unreal_start
+
+        - name: Verify UnrealIRCd is running
+          shell: ps aux | grep -v grep | grep -q '/usr/local/src/Unreal3.2.8.1'
+          register: unreal_process
+          ignore_errors: yes
+
+        - name: Fail if UnrealIRCd did not start
+          fail:
+            msg: "UnrealIRCd did not start successfully."
+          when: unreal_process.rc != 0
+      when: compile
+
+    - block:
+        - name: Copy UnrealIRCd compiled files
+          copy:
+            src: files/Unreal3.2
+            dest: /home
+            owner: root
+            group: root
+            mode: "0755"
+
+        - name: Ensure UnrealIRCd has execute permissions
+          file:
+            path: /home/Unreal3.2/unreal
+            mode: "0755"
+
+        - name: Start UnrealIRCd
+          command: ./unreal start
+          args:
+            chdir: /home/Unreal3.2
+
+        - name: Verify UnrealIRCd is running
+          shell: ps aux | grep -v grep | grep -q '/home/Unreal3.2/src/ircd'
+          register: unreal_process
+          ignore_errors: true
+
+        - name: Fail if UnrealIRCd did not start
+          fail:
+            msg: "UnrealIRCd did not start successfully."
+          when: unreal_process.rc != 0
+      when: not compile
+

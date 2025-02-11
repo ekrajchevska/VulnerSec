@@ -1,0 +1,15 @@
+#!/bin/bash
+
+WP_DIR="/var/www/wordpress"
+CONFIG_FILE="$WP_DIR/wp-config.php"
+
+if [ ! -f "$CONFIG_FILE" ]; then
+    cp $WP_DIR/wp-config-sample.php $CONFIG_FILE
+fi
+
+sed -i "s/database_name_here/{{ wordpress_db_name }}/" $CONFIG_FILE
+sed -i "s/username_here/{{ wordpress_db_user }}/" $CONFIG_FILE
+sed -i "s/password_here/{{ wordpress_db_password }}/" $CONFIG_FILE
+sed -i "s/localhost/{{ wordpress_db_host }}/" $CONFIG_FILE
+
+echo "WordPress configuration updated."
