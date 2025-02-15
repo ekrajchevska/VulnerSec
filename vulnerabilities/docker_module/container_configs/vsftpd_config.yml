@@ -1,0 +1,9 @@
+docker_vuln:
+  name: vsftpd
+  image: "evgenija1/vsftpd:2.3.4"
+  ports:
+    - "2121:21"
+  env: {}
+  volumes:
+    - "/opt/flag:/var/lib/vsftpd/flag:rw"
+
