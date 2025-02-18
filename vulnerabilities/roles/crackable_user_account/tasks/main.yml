@@ -1,0 +1,19 @@
+---
+# tasks file for vulnerabilities/roles/crackable_user_account
+
+- name: Generate a random password
+  set_fact:
+    random_password: "{{ accounts[0].password_list | random }}"
+
+- name: Ensure the user exists
+  user:
+    name: "{{ accounts[0].username }}"
+    password: "{{ random_password | password_hash('sha512') }}"
+    groups: []
+    state: present
+    shell: /bin/bash
+
+- name: Display user with created credentials
+  debug:
+    msg: "User {{ accounts[0].username }} created with password {{ random_password }}"
+

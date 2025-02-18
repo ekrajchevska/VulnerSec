@@ -1,0 +1,6 @@
+---
+# handlers file for vulnerabilities/roles/nc_backdoor_chroot_esc
+
+- name: Reload systemd
+  command: systemctl daemon-reload
+

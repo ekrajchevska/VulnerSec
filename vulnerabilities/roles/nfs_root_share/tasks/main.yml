@@ -1,0 +1,23 @@
+---
+# tasks file for vulnerabilities/roles/nfs_root_share
+
+- name: Install NFS packages
+  apt:
+    name:
+      - nfs-kernel-server
+      - nfs-common
+      - portmap
+    state: present
+    update_cache: yes
+
+- name: Configure NFS exports
+  template:
+    src: templates/exports.j2
+    dest: /etc/exports
+    owner: root
+    group: root
+    mode: "0777"
+
+- name: Export NFS shares
+  command: exportfs -a
+

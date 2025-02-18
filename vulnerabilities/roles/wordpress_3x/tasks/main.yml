@@ -1,0 +1,105 @@
+---
+# tasks file for vulnerabilities/roles/wordpress_3x
+
+- name: Install required packages
+  apt:
+    name:
+      - apache2
+      - mariadb-server
+      - php
+      - libapache2-mod-php
+      - php-mysql
+      - cron
+      - wget
+      - unzip
+    state: present
+    update_cache: yes
+
+- name: Enable Apache rewrite module
+  apache2_module:
+    name: rewrite
+    state: present
+  notify: restart apache
+
+- name: Remove default Apache site
+  file:
+    path: /etc/apache2/sites-enabled/000-default.conf
+    state: absent
+  notify: restart apache
+
+- name: Create WordPress installation directory
+  file:
+    path: /var/www/wordpress
+    state: directory
+    owner: www-data
+    group: www-data
+    mode: '0755'
+
+- name: Download WordPress tarball
+  get_url:
+    url: "https://wordpress.org/wordpress-{{ wordpress_version }}.tar.gz"
+    dest: /tmp/wordpress.tar.gz
+  when: wordpress_version is defined
+      
+
+- name: Extract WordPress
+  unarchive:
+    src: /tmp/wordpress.tar.gz
+    dest: /var/www/wordpress
+    remote_src: yes
+    extra_opts: [--strip-components=1]
+  args:
+    creates: /var/www/wordpress/wp-config-sample.php
+        
+- name: Install Python MySQL library (PyMySQL)
+  apt:
+    name: python3-pymysql
+    state: present
+    update_cache: yes
+  when: ansible_facts['os_family'] == 'Debian'
+
+
+- name: Create MySQL database for WordPress
+  mysql_db:
+    name: "{{ wordpress_db_name }}"
+    state: present
+    login_user: root
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+
+- name: Create MySQL user for WordPress and grant privileges
+  mysql_user:
+    name: "{{ wordpress_db_user }}"
+    password: "{{ wordpress_db_password }}"
+    priv: "{{ wordpress_db_name }}.*:ALL"
+    host: "{{ wordpress_db_host }}"
+    state: present
+    login_user: root
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+
+
+- name: Configure Apache VirtualHost for WordPress (non-SSL)
+  template:
+    src: wordpress_vhost.conf.j2
+    dest: /etc/apache2/sites-available/wordpress.conf
+  notify: restart apache
+      
+
+- name: Enable Apache site for WordPress (HTTP)
+  command: a2ensite wordpress.conf
+  notify: restart apache
+
+- name: Copy WordPress configuration script
+  template:
+    src: wordpress_conf.sh.j2
+    dest: /wordpress_conf.sh
+    owner: root
+    group: root
+    mode: '0755'
+
+
+- name: Create cron job to run WordPress configuration script every 5 minutes
+  cron:
+    name: "Run WordPress config script"
+    minute: "*/5"
+    user: root
+    job: "/bin/bash /wordpress_conf.sh"

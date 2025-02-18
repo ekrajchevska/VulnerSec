@@ -1,7 +1,10 @@
 Vagrant.configure("2") do |config|
-  config.vm.box = "bento/debian-10"
-  config.vm.hostname = "debian10-vm"
-
+  #config.vm.box = "bento/debian-10"
+  config.vm.box = "debian/bookworm64"
+  
+  #config.vm.hostname = "debian10-vm"
+  config.vm.hostname = "debian12-vm"
+  
   config.vm.provider "virtualbox" do |vb|
     vb.memory = "4096"  # 4GB of RAM
     vb.cpus = 4         # 4 CPUs

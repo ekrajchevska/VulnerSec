@@ -1,0 +1,41 @@
+---
+# tasks file for vulnerabilities/roles/docker_module
+
+- name: Update apt cache
+  apt:
+    update_cache: yes
+
+- name: Install Docker packages
+  apt:
+    name: docker.io
+    state: present
+
+- name: Ensure Docker service is started
+  service:
+    name: docker
+    state: started
+    enabled: yes
+
+- name: Install pip3
+  apt:
+    name: python3-pip
+    state: present
+    update_cache: yes
+
+- name: Install python3-venv
+  apt:
+    name: python3-venv
+    state: present
+    update_cache: yes
+
+- name: Create virtual environment for Docker module
+  command: python3 -m venv /opt/docker_module/venv
+  args:
+    creates: /opt/docker_module/venv/bin/activate
+
+- name: Install required Python Docker module in the virtual environment
+  pip:
+    name: docker
+    virtualenv: /opt/docker_module/venv
+    virtualenv_command: python3 -m venv
+

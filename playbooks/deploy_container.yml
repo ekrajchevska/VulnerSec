@@ -1,0 +1,9 @@
+- name: Deploy a vulnerability container
+  hosts: testserver
+  become: yes
+  tasks:
+    - import_role:
+        name: docker_module
+        tasks_from: container.yml
+      vars:
+        vulnerability_config: "{{ container_config }}"

@@ -1,0 +1,123 @@
+---
+# tasks file for vulnerabilities/roles/vsftpd
+
+- name: Enable 32-bit architecture on Debian/Ubuntu 
+  command: dpkg --add-architecture i386
+  register: add_i386_arch
+  changed_when: add_i386_arch.rc == 0
+  failed_when: add_i386_arch.rc not in [0,1]
+  when: ansible_facts['os_family'] == "Debian"
+      
+
+- name: Update apt cache (after enabling i386)
+  apt:
+    update_cache: yes
+  when: ansible_facts['os_family'] == "Debian"
+
+- name: Install required build packages
+  apt:
+    name:
+      - build-essential
+      - gcc-multilib
+      - libssl-dev
+      - libpam0g-dev
+      - libssl-dev:i386
+      - libpam0g-dev:i386
+    state: present
+  when: ansible_facts['os_family'] == "Debian"
+
+- name: Ensure needed directories exist
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  loop:
+    - /usr/share/empty
+    - /var/ftp
+    - /usr/local/man/man5
+    - /usr/local/man/man8
+    - /usr/local/src
+
+- name: Copy vsftpd tar to /usr/local/src
+  copy:
+    src: "vsftpd-2.3.4.tar.gz"
+    dest: "/usr/local/src/vsftpd-2.3.4.tar.gz"
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Unpack vsftpd
+  unarchive:
+    src: "/usr/local/src/vsftpd-2.3.4.tar.gz"
+    dest: "/usr/local/src"
+    remote_src: yes
+    creates: "/usr/local/src/vsftpd-2.3.4"
+  register: vsftpd_unpack
+
+- name: Copy custom Makefile
+  copy:
+    src: "Makefile"
+    dest: "/usr/local/src/vsftpd-2.3.4/Makefile"
+    owner: root
+    group: root
+    mode: '0644'
+  when: vsftpd_unpack.changed
+
+- name: Compile vsftpd
+  command: make
+  args:
+    chdir: "/usr/local/src/vsftpd-2.3.4"
+  register: vsftpd_make
+  changed_when: "'nothing to be done' not in vsftpd_make.stdout"
+
+- name: Install vsftpd
+  command: make install
+  args:
+    chdir: "/usr/local/src/vsftpd-2.3.4"
+  register: vsftpd_make_install
+  changed_when: "'nothing to be done' not in vsftpd_make_install.stdout"
+
+- name: Copy vsftpd binary
+  copy:
+    src: "/usr/local/src/vsftpd-2.3.4/vsftpd"
+    dest: "/usr/local/sbin/vsftpd"
+    owner: root
+    group: root
+    mode: '0755'
+    remote_src: yes
+  when: vsftpd_make_install.changed
+
+- name: Copy init script
+  copy:
+    src: "vsftpd_init.d"
+    dest: "/etc/init.d/vsftpd"
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Create vsftpd.conf from template
+  template:
+    src: "templates/vsftpd.conf.j2"
+    dest: "/etc/vsftpd.conf"
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Create ftp user (uid=507, gid=0, home=/var/ftp)
+  user:
+    name: ftp
+    uid: "{{ ftp_user_uid }}"
+    group: "{{ ftp_user_gid }}"
+    home: "/var/ftp"
+    create_home: yes
+    shell: "/usr/sbin/nologin"
+    state: present
+
+- name: Enable and start vsftpd service
+  service:
+    name: vsftpd
+    enabled: yes
+    state: started
+

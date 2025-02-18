@@ -1,0 +1,12 @@
+---
+# defaults file for vulnerabilities/roles/unrealirc
+
+compile: false
+unrealirc_version: "3.2.8.1"
+unrealirc_source_url: "https://github.com/cliffe/SecGen/blob/master/modules/services/unix/irc/unrealirc/files/Unreal3.2.8.1.tar.gz"
+unrealircd_autostart: true
+packages:
+  - build-essential
+  - libssl-dev
+  - zlib1g-dev
+  - wget

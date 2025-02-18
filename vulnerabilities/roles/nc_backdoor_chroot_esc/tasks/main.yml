@@ -1,0 +1,63 @@
+---
+# tasks file for vulnerabilities/roles/nc_backdoor_chroot_esc
+
+- name: Generate random port
+  set_fact:
+    random_port: "{{ range(1025, 65535) | random }}"
+   
+- name: Show random_port value
+  debug:
+    msg: "The randomly generated port is: {{ random_port }}"
+
+- name: Install required packages
+  apt:
+    name:
+      - netcat-traditional
+    state: present
+
+- name: Create chroot directory
+  file:
+    path: /opt/chroot
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Copy necessary binaries into chroot
+  command: "{{ item }}"
+  with_items:
+    - cp -r /bin /opt/chroot/
+    - cp -r /lib /opt/chroot/
+    - cp -r /lib64 /opt/chroot/
+    - cp -r /usr /opt/chroot/
+
+- name: Ensure /opt/chroot/dev directory exists
+  file:
+    path: /opt/chroot/dev
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Create /dev/null inside chroot
+  command: mknod -m 666 /opt/chroot/dev/null c 1 3
+
+
+- name: Upload systemd service file
+  template:
+    src: templates/chroot.service.j2
+    dest: /etc/systemd/system/chroot.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload systemd 
+
+- name: Reload systemd to register the service
+  command: systemctl daemon-reload
+
+- name: Enable and start the chroot service
+  service:
+    name: chroot
+    state: restarted
+    enabled: yes
+

@@ -1,0 +1,21 @@
+---
+# vulnerable container deployment
+
+- name: Load container config
+  include_vars:
+    file: "{{ role_path }}/container_configs/{{ container_config }}"
+  
+- name: Pull vulnerability container image
+  community.docker.docker_image:
+    name: "{{ docker_vuln.image }}"
+    source: pull
+
+- name: Run vulnerability container
+  community.docker.docker_container:
+    name: "{{ docker_vuln.name }}"
+    image: "{{ docker_vuln.image }}"
+    state: started
+    restart_policy: unless-stopped
+    published_ports: "{{ docker_vuln.ports }}"
+    env: "{{ docker_vuln.env }}"
+    volumes: "{{ docker_vuln.volumes }}"

@@ -1,0 +1,4 @@
+---
+# defaults file for vulnerabilities/roles/vsftpd
+ftp_user_uid: 507      
+ftp_user_gid: 0

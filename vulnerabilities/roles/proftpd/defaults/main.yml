@@ -1,0 +1,8 @@
+---
+# defaults file for vulnerabilities/roles/proftpd
+
+proftpd_port: 21
+server_name: "Backdoored-ProFTPd"
+welcome_msg: "Welcome to the Backdoored ProFTPD 1.3.3c!"
+ftp_user: "ftp"
+ftp_user_home: "/home/ftp"

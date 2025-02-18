@@ -1,0 +1,8 @@
+---
+# handlers file for vulnerabilities/roles/ssh_root_login
+
+- name: Restart SSH
+  service:
+    name: ssh
+    state: restarted
+

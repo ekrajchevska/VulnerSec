@@ -1,0 +1,6 @@
+- hosts: testserver
+  become: yes
+  roles:
+    - ssh_root_login
+
+
