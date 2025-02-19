@@ -1,5 +1,13 @@
-# SSH Configuration File
-PermitRootLogin yes
-# PubkeyAuthentication yes
-# PasswordAuthentication yes
+# Global
+PermitRootLogin prohibit-password
+PasswordAuthentication no
+PubkeyAuthentication yes
 
+Match User root
+  PermitRootLogin yes
+  PasswordAuthentication yes
+
+Match User vagrant
+  PasswordAuthentication no
+  PubkeyAuthentication yes
+  AuthorizedKeysFile .ssh/authorized_keys

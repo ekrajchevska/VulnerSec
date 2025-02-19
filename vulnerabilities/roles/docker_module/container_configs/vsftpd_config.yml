@@ -5,5 +5,5 @@ docker_vuln:
     - "2121:21"
   env: {}
   volumes:
-    - "/opt/flag:/var/lib/vsftpd/flag:rw"
+    - "/opt/flag:/var/ftp/flag:rw"
 

@@ -1,6 +1,32 @@
-flag_dir: "/opt/flag"  
 num_words: 3
-flag_filenames:
-  - "financial_report.xlsx"
-  - "admin_credentials.txt"
-  - "salaries.pdf"
+
+flag_map:
+  crackable_user_account:
+    dir: "/home/weak_user"
+    filename: "flag.txt"
+  nfs_root_share:
+    dir: "/"
+    filename: "root_flag.txt"
+  wordpress_3x:
+    dir: "/var/www/html"
+    filename: "wp-flag.txt"
+  vsftpd:
+    dir: "/var/ftp"
+    filename: "vsftpd_flag.txt"
+  proftpd:
+    dir: "/var/ftp"
+    filename: "proftpd_flag.txt"
+  ssh_root_login:
+    dir: "/root"
+    filename: "root_ssh_flag.txt"
+  nc_backdoor_chroot_esc:
+    dir: "/root"
+    filename: "escape_flag.txt"
+  unrealirc:
+    dir: "/opt/flag/unrealirc"
+    filename: "unreal_flag.txt"
+  grafana:
+    dir: "/opt/flag/grafana"
+    filename: "grafana_flag.txt"
+
+  

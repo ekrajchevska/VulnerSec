@@ -1,19 +1,57 @@
 ---
 # tasks file for vulnerabilities/roles/wordpress_3x
 
+- name: Install GnuPG # this is required for apt_key
+  apt:
+    name: gnupg
+    state: present
+    update_cache: yes
+  become: yes
+
+- name: Add GPG key for PHP repository
+  apt_key:
+    keyserver: keyserver.ubuntu.com
+    id: B188E2B695BD4743
+    state: present
+  become: yes
+
+- name: Add the PHP repository for PHP 7.4
+  apt_repository:
+    repo: 'deb https://packages.sury.org/php/ bookworm main'
+    state: present
+  become: yes
+  
+
 - name: Install required packages
   apt:
     name:
       - apache2
       - mariadb-server
-      - php
-      - libapache2-mod-php
-      - php-mysql
+      - php7.4
+      - libapache2-mod-php7.4
+      - php7.4-mysql
       - cron
       - wget
       - unzip
     state: present
     update_cache: yes
+
+
+- name: Disable PHP 8.2 module in Apache
+  command: a2dismod php8.2
+  become: yes
+  ignore_errors: yes
+
+- name: Enable PHP 7.4 module in Apache
+  command: a2enmod php7.4
+  become: yes
+
+- name: Restart Apache to apply PHP module changes
+  service:
+    name: apache2
+    state: restarted
+  become: yes
+
 
 - name: Enable Apache rewrite module
   apache2_module:
@@ -40,7 +78,6 @@
     url: "https://wordpress.org/wordpress-{{ wordpress_version }}.tar.gz"
     dest: /tmp/wordpress.tar.gz
   when: wordpress_version is defined
-      
 
 - name: Extract WordPress
   unarchive:
@@ -50,14 +87,13 @@
     extra_opts: [--strip-components=1]
   args:
     creates: /var/www/wordpress/wp-config-sample.php
-        
+
 - name: Install Python MySQL library (PyMySQL)
   apt:
     name: python3-pymysql
     state: present
     update_cache: yes
   when: ansible_facts['os_family'] == 'Debian'
-
 
 - name: Create MySQL database for WordPress
   mysql_db:
@@ -76,13 +112,11 @@
     login_user: root
     login_unix_socket: /var/run/mysqld/mysqld.sock
 
-
 - name: Configure Apache VirtualHost for WordPress (non-SSL)
   template:
     src: wordpress_vhost.conf.j2
     dest: /etc/apache2/sites-available/wordpress.conf
   notify: restart apache
-      
 
 - name: Enable Apache site for WordPress (HTTP)
   command: a2ensite wordpress.conf
@@ -95,7 +129,6 @@
     owner: root
     group: root
     mode: '0755'
-
 
 - name: Create cron job to run WordPress configuration script every 5 minutes
   cron:

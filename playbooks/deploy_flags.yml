@@ -1,0 +1,9 @@
+- hosts: testserver
+  become: yes
+  vars:
+    vulnerabilities_to_flag:
+      - vsftpd
+      - unrealirc
+      - grafana
+  roles:
+    - flag

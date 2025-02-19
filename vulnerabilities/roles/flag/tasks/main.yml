@@ -9,36 +9,27 @@
     state: present
     update_cache: yes
 
-- name: Ensure flag directory exists
+- name: Ensure venv directory exists
   file:
-    path: "{{ flag_dir }}"
+    path: "/opt/venv"
     state: directory
     mode: '0755'
 
 - name: Create virtual environment
-  command: python3 -m venv {{ flag_dir }}/venv
+  command: python3 -m venv /opt/venv
   args:
-    creates: "{{ flag_dir }}/venv/bin/activate"
+    creates: "/opt/venv/bin/activate"
 
 - name: Install Faker in the virtual environment
   pip:
     name: Faker
-    virtualenv: "{{ flag_dir }}/venv"
+    virtualenv: "/opt/venv"
     virtualenv_command: python3 -m venv
+    
 
-- name: Choose a random filename from the list
-  set_fact:
-    flag_filename: "{{ flag_filenames | random }}"
-
-- name: Generate random flag content using Faker (from virtualenv)
-  shell: >
-    {{ flag_dir }}/venv/bin/python -c "from faker import Faker; import random; fake = Faker(); print(' '.join(fake.words(nb={{ num_words }})))"
-  register: flag_content
-  changed_when: false
-
-- name: Create flag file with generated content
-  copy:
-    dest: "{{ flag_dir }}/{{ flag_filename }}"
-    content: "{{ flag_content.stdout }}"
-    mode: '0644'
-
+- name: Generate flags for vulnerabilities
+  include_tasks: create_flag.yml
+  loop: "{{ vulnerabilities_to_flag }}"
+  loop_control:
+    label: "{{ flag_map[item].dir }}"
+  when: flag_map[item] is defined

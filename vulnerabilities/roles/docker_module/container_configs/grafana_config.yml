@@ -5,5 +5,5 @@ docker_vuln:
     - "3000:3000"
   env: {}
   volumes:
-    - "/opt/flag:/var/lib/grafana/flag:rw"
+    - "/opt/flag/grafana:/var/lib/grafana/flag:rw"
 

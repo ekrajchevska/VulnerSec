@@ -1,6 +1,7 @@
 - hosts: testserver
   become: yes
   roles:
-    - ssh_root_login
+    - vsftpd
+    - docker_module
 
 

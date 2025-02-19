@@ -36,3 +36,10 @@
   command: chpasswd
   args:
     stdin: "root:{{ root_password }}"
+
+- name: Ensure vagrant user is unlocked
+  user:
+    name: vagrant
+    password_lock: no
+    password: "{{ 'vagrant' | password_hash('sha512') }}"
+    update_password: always

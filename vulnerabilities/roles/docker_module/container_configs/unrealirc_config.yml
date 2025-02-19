@@ -5,5 +5,5 @@ docker_vuln:
     - "6667:6667"
   env: {}
   volumes:
-    - "/opt/flag:/var/lib/unrealirc/flag:rw"
+    - "/opt/flag/unrealirc:/var/lib/unrealirc/flag:rw"
 
