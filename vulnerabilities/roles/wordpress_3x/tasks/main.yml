@@ -15,21 +15,20 @@
     state: present
   become: yes
 
-- name: Add the PHP repository for PHP 7.4
+- name: Add the PHP repository for PHP 7.0
   apt_repository:
     repo: 'deb https://packages.sury.org/php/ bookworm main'
     state: present
   become: yes
-  
 
 - name: Install required packages
   apt:
     name:
       - apache2
       - mariadb-server
-      - php7.4
-      - libapache2-mod-php7.4
-      - php7.4-mysql
+      - php7.0
+      - libapache2-mod-php7.0
+      - php7.0-mysql
       - cron
       - wget
       - unzip
@@ -42,8 +41,8 @@
   become: yes
   ignore_errors: yes
 
-- name: Enable PHP 7.4 module in Apache
-  command: a2enmod php7.4
+- name: Enable PHP 7.0 module in Apache
+  command: a2enmod php7.0
   become: yes
 
 - name: Restart Apache to apply PHP module changes
