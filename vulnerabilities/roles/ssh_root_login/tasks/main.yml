@@ -37,9 +37,9 @@
   args:
     stdin: "root:{{ root_password }}"
 
-- name: Ensure vagrant user is unlocked
+- name: Ensure debian user is unlocked
   user:
-    name: vagrant
+    name: debian
     password_lock: no
-    password: "{{ 'vagrant' | password_hash('sha512') }}"
+    password: "{{ 'debian' | password_hash('sha512') }}"
     update_password: always

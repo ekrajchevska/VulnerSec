@@ -4,6 +4,10 @@
 - name: Load container config
   include_vars:
     file: "{{ role_path }}/container_configs/{{ container_config }}"
+
+- name: Configure Grafana-specific variables
+  include_tasks: grafana_setup.yml
+  when: container_config == 'grafana_config.yml'
   
 - name: Pull vulnerability container image
   community.docker.docker_image:

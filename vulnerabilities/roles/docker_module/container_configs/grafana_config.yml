@@ -3,7 +3,8 @@ docker_vuln:
   image: "grafana/grafana:8.0.0"
   ports:
     - "3000:3000"
-  env: {}
+  env:
+    GF_SECURITY_ADMIN_PASSWORD: "{{ grafana_weak_password }}"
   volumes:
-    - "/opt/flag/grafana:/var/lib/grafana/flag:rw"
+    - "/opt/grafana_data:/var/lib/grafana:rw"
 

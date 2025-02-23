@@ -1,0 +1,19 @@
+
+- name: Load Grafana configuration vars
+  include_vars: "{{ role_path }}/defaults/grafana.yml"
+
+- name: Ensure Grafana data directory has correct ownership
+  file:
+    path: "/opt/grafana_data"
+    owner: "472"
+    group: "472"
+    recurse: yes
+  become: yes
+
+- name: Select a weak Grafana admin password
+  set_fact:
+    grafana_weak_password: "{{ grafana_password_list | random }}"
+
+- name: Display chosen password
+  debug:
+    msg: "Grafana password is {{ grafana_weak_password }}"
