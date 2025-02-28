@@ -31,6 +31,17 @@
     - cp -r /lib64 /opt/chroot/
     - cp -r /usr /opt/chroot/
 
+- name: Remove netcat symlink in chroot
+  file:
+    path: /opt/chroot/usr/bin/nc
+    state: absent
+  become: yes
+
+- name: Copy netcat binary into chroot
+  command: cp /usr/bin/nc /opt/chroot/usr/bin/nc
+  become: yes
+
+
 - name: Ensure /opt/chroot/dev directory exists
   file:
     path: /opt/chroot/dev

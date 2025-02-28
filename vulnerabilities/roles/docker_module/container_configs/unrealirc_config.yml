@@ -1,9 +1,9 @@
 docker_vuln:
   name: unrealirc
-  image: "evgenija1/unrealirc3.2:latest"
+  image: "gitlab.finki.ukim.mk:5050/vojdan.kjorveziroski/mrezhna-bezbednost/unrealirc-custom-user"
   ports:
     - "6667:6667"
+    - "4444:4444"
   env: {}
   volumes:
     - "/opt/flag/unrealirc:/var/lib/unrealirc/flag:rw"
-

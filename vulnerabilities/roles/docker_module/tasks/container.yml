@@ -19,6 +19,7 @@
     name: "{{ docker_vuln.name }}"
     image: "{{ docker_vuln.image }}"
     state: started
+    recreate: true
     restart_policy: unless-stopped
     published_ports: "{{ docker_vuln.ports }}"
     env: "{{ docker_vuln.env }}"
