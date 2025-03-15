@@ -1,5 +1,3 @@
-# Vulnerabilities
-
 ## Overview
 
 The main purpose of this project is to generate vulnerable virtual machines (VMs) intended for exploitation exercises by cybersecurity students. This project takes inspiration from the well-known [SecGen repository](https://github.com/secgen) but uses Ansible playbooks instead of Puppet for configuration—providing a more straightforward and modular way to set up the VMs and containerized vulnerabilities.
