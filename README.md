@@ -1,91 +1,109 @@
-## Overview
+# VulnerSec – Open-Source Labs for Exploitation Practice & Research
 
-The main purpose of this project is to generate vulnerable virtual machines (VMs) intended for exploitation exercises by cybersecurity students. This project takes inspiration from the well-known [SecGen repository](https://github.com/secgen) but uses Ansible playbooks instead of Puppet for configuration—providing a more straightforward and modular way to set up the VMs and containerized vulnerabilities.
+VulnerSec is a **framework for generating self-contained vulnerable environments**—virtual machines *and* containerised services—that students can attack without risking the host network.  
+The project is inspired by [SecGen](https://github.com/secgen) but replaces Puppet manifests with **Ansible roles**, giving educators a cleaner, more modular workflow that spins up in minutes on anything from VirtualBox to VMware or bare-metal ESXi.
 
-Each vulnerability is configured either directly on the VM or within a Docker container, and a flag is generated for exploitation challenges. The project is designed to be easily deployed using a hypervisor of your choice (we use VirtualBox) along with Vagrant for VM provisioning.
+---
 
-## Prerequisites
+## 1  Why Ansible roles?
 
-- **Operating System:** Linux (Debian/Ubuntu recommended)
-- **Virtualization:** [VirtualBox](https://www.virtualbox.org/) (or another hypervisor)
-- **Provisioning Tool:** [Vagrant](https://www.vagrantup.com/)
-- **Configuration Management:** [Ansible](https://www.ansible.com/)  
-  (Tested with Ansible 10.7.0 / ansible-core 2.17.7)
-- **Python Virtual Environment:** Python 3 (with a `venv`, using same location as the requirements.txt file)
+* **Modularity** – each vulnerability lives in its own role (`vulnerabilities/roles/<name>`), so you can mix, match or extend scenarios without touching the surrounding playbooks.  
+* **Simplicity** – agent-less SSH execution, YAML syntax, and Galaxy-style structure make it approachable for instructors who are not full-time DevOps engineers.  
+* **Isolation safeguards** – roles ship with secure-by-default settings (host-only/NAT networking, Docker seccomp & AppArmor profiles, optional read-only file systems) to prevent VM or container escape while keeping the workflow frictionless.
 
-### Installing Dependencies
+---
 
-On Debian/Ubuntu, you can install VirtualBox and Vagrant using:
+## 2  Quick Start
 
-```bash
-sudo apt-get update
-sudo apt-get install -y virtualbox vagrant
+### 2.1  Prerequisites
+
+| Tool | Tested version |
+|------|----------------|
+| Virtualisation | VirtualBox 7.0 (any hypervisor is fine) |
+| Provisioning | Vagrant 2.4 |
+| Config-mgmt | Ansible **10.7.0** / ansible-core 2.17 |
+| Python | 3.11 with `venv` |
+
+```
+bash
+sudo apt update && sudo apt install -y virtualbox vagrant python3-venv
 ```
 
-## Project Setup
+### 2.2  Clone & Setup
 
-Clone the repository and set up the virtual environment
-
-```bash
-python3 -m venv venv
-source venv/bin/activate
+```
+git clone https://github.com/ekrajchevska/vulnersec.git
+cd vulnersec
+python3 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### Initializing the Vagrant Environment
+### 2.3  Bring up the base VM
 
-After cloning the repository and setting up the virtual environment, initialize your Vagrant environment:
+```
+vagrant up           # launches the Debian box defined in Vagrantfile
+vagrant ssh          # optional: log in as the 'vagrant' user
+```
+The Vagrantfile already configures bridged networking (change to host-only if you need extra containment), CPU/RAM, and SSH port-forwarding; tweak as required.
 
-```bash
-vagrant init
+---
+
+## 3  Deploying Vulnerabilities
+
+Every exploit is an Ansible role:
+
+```
+# example: enable the SSH-root-login misconfiguration
+ansible-playbook playbooks/deploy_vulnerability.yml -e role_name=ssh_root_login
+```
+`deploy_vulnerability.yml` is a thin wrapper that imports the chosen role; you may also invoke roles directly if you prefer.
+
+### 3.1  Legacy software via Docker
+
+Some packages (e.g. UnrealIRC 3.2) won’t compile on modern distros.
+Compile once on an older base image, publish to Docker Hub, then deploy:
+
+```
+# one-off: install Docker
+ansible-playbook playbooks/setup_docker.yml
+
+# run the vulnerable container with a per-scenario config file
+ansible-playbook playbooks/container_template.yml -e vulnerability_config=container_configs/unrealirc.yml
 ```
 
-This command creates a basic Vagrantfile (or uses the provided one) along with the .vagrant folder for managing the VM state.
-Modify the inventory/hosts.ini and the files in group_vars/host_vars as needed for your environment. In this example, we use a single host (testserver) on which the vulnerabilities are run and tested. Note that this structure is designed to support multiple VMs running different vulnerabilities. Be sure to set the appropriate host IP and networking settings according to your setup.
+---
 
-The provided Vagrantfile is pre-configured to define the VM’s networking (e.g we use bridged networking), CPU, memory, and the Debian base image version. Adjust these parameters as needed.
-To start the VM, run:
+## 4  Repository layout
 
-```bash
-vagrant up
+```
+vulnersec/
+├── inventory/            # hosts.ini plus group_vars/ & host_vars/
+├── playbooks/
+│   ├── deploy_vulnerability.yml
+│   ├── setup_docker.yml
+│   └── container_template.yml
+├── vulnerabilities/
+│   └── roles/
+│       ├── crackable_user_account/
+│       ├── nfs_root_share/
+│       └── … (>10 roles)
+└── Vagrantfile
 ```
 
-### Deploying Vulnerabilities
+Each role follows the standard Ansible skeleton (`tasks/`, `templates/`, `files/`, `defaults/`).
+Flags are produced by the dedicated `flag` role and dropped into predictable paths so students can prove exploitation.
 
-Deploying a vulnerability is as simple as running the corresponding Ansible playbook. For example, to deploy a netcat backdoor vulnerability:
+---
 
-```bash
-ansible-playbook vulnerabilities/netcat_backdoor/nc_backdoor_chroot_esc.yml
+## 5  Cleaning out
+
+```
+vagrant destroy -f    # shuts down and deletes the VM
 ```
 
-Some vulnerabilities can be easily configured regardless of the underlying OS (e.g. Crackable User Account). However, legacy exploits—such as UnrealIRC3.2, released nearly fifteen years ago—often encounter issues when compiled on modern operating systems (Debian 12) due to outdated libraries, misconfigurations, and compatibility problems. For instance, while UnrealIRC3.2 compiled successfully on Debian 8, attempts to compile it on newer distributions have failed.
+---
 
-The workaround is to compile these legacy vulnerabilities on an older Debian version and then containerize them. This approach isolates the vulnerable software in a Docker container, ensuring it runs consistently regardless of the host OS. It is strongly recommended to first inspect whether a vulnerability has been containerized. If it has, deploy it using the containerized configuration; if not, it likely means the vulnerability is straightforward to configure on the host.
+## 6  Citation
 
-In order to run a vulnerable container, first, set up Docker on your VM using the provided Docker module playbook:
-
-```bash
-ansible-playbook vulnerabilities/docker_module/config_docker.yml
-```
-
-A generic container template is provided. To deploy a specific vulnerability (for example, UnrealIRC3.2), use a configuration file with vulnerability-specific variables and deploy the container with:
-
-```bash
-ansible-playbook vulnerabilities/docker_module/container_template.yml -e "vulnerability_config=container_configs/unrealirc_config.yml"
-```
-
-## Using Vagrant
-
-If you're using the `vagrant` user as the `ansible_user`, then SSH-ing into the VM is as simple as:
-
-```bash
-vagrant ssh
-```
-
-When you're done with your lab environment, you can destroy the VM with:
-
-```bash
-vagrant destroy -f
-```
-
-This command will force the VM to shut down and be removed, freeing up system resources.
+If you use VulnerSec in academic work, please cite:
+> E. Krajchevska and V. Kjorveziroski, “VulnerSec: A Flexible, Automated and Open-Source Cyber-Security Framework,” Proc. Int. Conf. Information and Communication Technologies, 2025.
